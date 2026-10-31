@@ -43,7 +43,7 @@
             background: rgba(15, 23, 42, 0.95);
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             font-weight: bold;
-            font-size: 16px;
+            font-size: 15px;
             z-index: 10;
         }
 
@@ -54,11 +54,10 @@
             background: #1e293b;
         }
 
-        /* Touch Controls Area */
         .controls-container {
             width: 100%;
             max-width: 450px;
-            padding: 20px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -111,16 +110,18 @@
 
     <div class="game-wrapper">
         <div class="hud">
+            <span id="levelTxt">المستوى: 1</span>
             <span id="scoreTxt">النقاط: 0</span>
-            <span id="livesTxt">الأرواح: ❤️❤️❤️</span>
+            <span id="livesTxt">❤️❤️❤️</span>
         </div>
         <canvas id="gameCanvas" width="400" height="350"></canvas>
     </div>
 
     <div class="controls-container">
         <div class="d-pad">
-            <div class="btn" id="btnLeft">⬅️</div>
-            <div class="btn" id="btnRight">➡️</div>
+            <!-- تم عكس الأزرار هنا وتصحيح الاتجاهات -->
+            <div class="btn" id="btnRight">⬅️</div>
+            <div class="btn" id="btnLeft">➡️</div>
         </div>
         <div class="btn btn-jump" id="btnJump">⬆️</div>
     </div>
@@ -131,9 +132,10 @@
 
         let score = 0;
         let lives = 3;
+        let currentLevel = 0;
 
         let player = {
-            x: 50, y: 150,
+            x: 50, y: 200,
             width: 24, height: 36,
             vx: 0, vy: 0,
             speed: 3.5,
@@ -142,25 +144,62 @@
             grounded: false
         };
 
-        let platforms = [
-            { x: 0, y: 310, width: 400, height: 40 },
-            { x: 40, y: 230, width: 110, height: 15 },
-            { x: 210, y: 180, width: 130, height: 15 },
-            { x: 70, y: 120, width: 100, height: 15 }
+        // مستويات اللعبة والمهمات
+        const levels = [
+            {
+                platforms: [
+                    { x: 0, y: 310, width: 400, height: 40 },
+                    { x: 40, y: 230, width: 110, height: 15 },
+                    { x: 210, y: 180, width: 130, height: 15 },
+                    { x: 70, y: 120, width: 100, height: 15 }
+                ],
+                coins: [
+                    { x: 90, y: 190, collected: false },
+                    { x: 270, y: 140, collected: false },
+                    { x: 110, y: 80, collected: false }
+                ],
+                door: { x: 340, y: 260, width: 25, height: 50 }
+            },
+            {
+                platforms: [
+                    { x: 0, y: 310, width: 400, height: 40 },
+                    { x: 100, y: 240, width: 90, height: 15 },
+                    { x: 230, y: 180, width: 100, height: 15 },
+                    { x: 50, y: 130, width: 100, height: 15 }
+                ],
+                coins: [
+                    { x: 140, y: 200, collected: false },
+                    { x: 280, y: 140, collected: false },
+                    { x: 90, y: 90, collected: false }
+                ],
+                door: { x: 40, y: 80, width: 25, height: 50 }
+            },
+            {
+                platforms: [
+                    { x: 0, y: 310, width: 400, height: 40 },
+                    { x: 50, y: 250, width: 80, height: 15 },
+                    { x: 170, y: 200, width: 80, height: 15 },
+                    { x: 280, y: 140, width: 90, height: 15 },
+                    { x: 130, y: 90, width: 90, height: 15 }
+                ],
+                coins: [
+                    { x: 90, y: 210, collected: false },
+                    { x: 210, y: 160, collected: false },
+                    { x: 320, y: 100, collected: false },
+                    { x: 170, y: 50, collected: false }
+                ],
+                door: { x: 340, y: 90, width: 25, height: 50 }
+            }
         ];
 
-        let coins = [
-            { x: 90, y: 190, collected: false },
-            { x: 270, y: 140, collected: false },
-            { x: 110, y: 80, collected: false }
-        ];
+        let activeLevel = JSON.parse(JSON.stringify(levels[currentLevel]));
+        let message = "";
+        let messageTimer = 0;
 
         let keys = { left: false, right: false, jump: false };
 
-        // Fixed Touch Controls Listener
         function setupButton(id, keyName) {
             const btn = document.getElementById(id);
-            
             ['touchstart', 'mousedown'].forEach(evt => {
                 btn.addEventListener(evt, (e) => {
                     e.preventDefault();
@@ -168,7 +207,6 @@
                     btn.classList.add('active');
                 }, { passive: false });
             });
-
             ['touchend', 'mouseup', 'mouseleave'].forEach(evt => {
                 btn.addEventListener(evt, (e) => {
                     e.preventDefault();
@@ -182,7 +220,6 @@
         setupButton('btnRight', 'right');
         setupButton('btnJump', 'jump');
 
-        // إضافة دعم لوحة المفاتيح (Keyboard Controls)
         window.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
             if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
@@ -194,6 +231,27 @@
             if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
             if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.jump = false;
         });
+
+        function showMessage(text) {
+            message = text;
+            messageTimer = 90; // مدة ظهور الرسالة
+        }
+
+        function loadLevel(lvlIndex) {
+            if (lvlIndex >= levels.length) {
+                showMessage("🎉 مبروك! أنهيت اللعبة بنجاح!");
+                currentLevel = 0;
+                score = 0;
+            } else {
+                currentLevel = lvlIndex;
+                showMessage(`المستوى ${currentLevel + 1}`);
+            }
+            activeLevel = JSON.parse(JSON.stringify(levels[currentLevel]));
+            player.x = 50;
+            player.y = 200;
+            player.vx = 0;
+            player.vy = 0;
+        }
 
         function update() {
             if (keys.left) player.vx = -player.speed;
@@ -211,8 +269,8 @@
 
             player.grounded = false;
 
-            // إصلاح شرط التصادم مع المنصات
-            platforms.forEach(p => {
+            // التصادم مع المنصات
+            activeLevel.platforms.forEach(p => {
                 if (
                     player.x < p.x + p.width &&
                     player.x + player.width > p.x &&
@@ -229,36 +287,68 @@
             if (player.x < 0) player.x = 0;
             if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 
+            // السقوط في الفراغ
             if (player.y > canvas.height) {
                 lives--;
                 player.x = 50; player.y = 150; player.vy = 0;
-                if (lives <= 0) { score = 0; lives = 3; coins.forEach(c => c.collected = false); }
+                if (lives <= 0) {
+                    score = 0;
+                    lives = 3;
+                    loadLevel(0);
+                }
             }
 
-            coins.forEach(c => {
+            // جمع العملات (المهمة الأولى)
+            activeLevel.coins.forEach(c => {
                 if (!c.collected && Math.abs((player.x + player.width / 2) - c.x) < 18 && Math.abs((player.y + player.height / 2) - c.y) < 18) {
                     c.collected = true;
                     score += 100;
+                    // فحص ما إذا تم جمع كل العملات
+                    if (activeLevel.coins.every(coin => coin.collected)) {
+                        showMessage("✨ افتتح الباب! توجه إليه!");
+                    }
                 }
             });
 
+            // التحقق من الوصول للبوابة عند جمع كافة العملات
+            let allCollected = activeLevel.coins.every(c => c.collected);
+            let d = activeLevel.door;
+            if (allCollected &&
+                player.x < d.x + d.width &&
+                player.x + player.width > d.x &&
+                player.y < d.y + d.height &&
+                player.y + player.height > d.y) {
+                loadLevel(currentLevel + 1);
+            }
+
+            if (messageTimer > 0) messageTimer--;
+
+            document.getElementById('levelTxt').innerText = `المستوى: ${currentLevel + 1}`;
             document.getElementById('scoreTxt').innerText = `النقاط: ${score}`;
-            document.getElementById('livesTxt').innerText = `الأرواح: ${'❤️'.repeat(lives)}`;
+            document.getElementById('livesTxt').innerText = '❤️'.repeat(lives);
         }
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Platforms
-            platforms.forEach(p => {
+            // رسم المنصات
+            activeLevel.platforms.forEach(p => {
                 ctx.fillStyle = "#475569";
                 ctx.fillRect(p.x, p.y, p.width, p.height);
                 ctx.fillStyle = "#64748b";
                 ctx.fillRect(p.x, p.y, p.width, 3);
             });
 
-            // Draw Coins
-            coins.forEach(c => {
+            // رسم البوابة (تتغير لونه للأخضر إذا اكتمل جمع العملات)
+            let allCollected = activeLevel.coins.every(c => c.collected);
+            let d = activeLevel.door;
+            ctx.fillStyle = allCollected ? "#22c55e" : "#64748b";
+            ctx.fillRect(d.x, d.y, d.width, d.height);
+            ctx.strokeStyle = "#fff";
+            ctx.strokeRect(d.x, d.y, d.width, d.height);
+
+            // رسم العملات
+            activeLevel.coins.forEach(c => {
                 if (!c.collected) {
                     ctx.beginPath();
                     ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
@@ -267,11 +357,23 @@
                 }
             });
 
-            // Draw Player
+            // رسم اللاعب
             ctx.fillStyle = "#dc2626";
             ctx.fillRect(player.x, player.y, player.width, player.height);
             ctx.fillStyle = "#fde68a";
             ctx.fillRect(player.x + 4, player.y + 4, player.width - 8, 10);
+
+            // عرض رسائل التوجيه والمهمات على الشاشة
+            if (messageTimer > 0) {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+                ctx.fillRect(50, 130, 300, 50);
+                ctx.strokeStyle = "#f59e0b";
+                ctx.strokeRect(50, 130, 300, 50);
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 16px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(message, canvas.width / 2, 160);
+            }
         }
 
         function loop() {
@@ -280,6 +382,7 @@
             requestAnimationFrame(loop);
         }
 
+        loadLevel(0);
         loop();
     </script>
 </body>
