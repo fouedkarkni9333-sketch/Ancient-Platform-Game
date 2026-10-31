@@ -9,7 +9,6 @@
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
-            touch-action: manipulation;
         }
 
         body {
@@ -26,11 +25,10 @@
             overflow: hidden;
         }
 
-        /* Container & HUD */
         .game-wrapper {
             position: relative;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -38,11 +36,11 @@
 
         .hud {
             width: 100%;
-            padding: 10px 15px;
+            padding: 12px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
             font-weight: bold;
             font-size: 16px;
@@ -54,18 +52,18 @@
             width: 100%;
             height: auto;
             background: #1e293b;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
 
         /* Touch Controls Area */
         .controls-container {
             width: 100%;
-            max-width: 500px;
-            padding: 15px 20px;
+            max-width: 450px;
+            padding: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: #090d16;
+            margin-bottom: 10px;
         }
 
         .d-pad {
@@ -79,111 +77,52 @@
             border: 2px solid #64748b;
             font-size: 24px;
             font-weight: bold;
-            width: 65px;
-            height: 65px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            transition: background 0.1s, transform 0.1s;
+            cursor: pointer;
         }
 
-        .btn:active {
+        .btn:active, .btn.active {
             background: #f59e0b;
             color: #000;
             transform: scale(0.92);
         }
 
         .btn-jump {
-            width: 75px;
-            height: 75px;
+            width: 80px;
+            height: 80px;
             background: #dc2626;
             border-color: #ef4444;
             border-radius: 20px;
         }
 
-        .btn-jump:active {
+        .btn-jump:active, .btn-jump.active {
             background: #22c55e;
             border-color: #4ade80;
-        }
-
-        /* Settings Modal */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal.hidden { display: none; }
-
-        .modal-box {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            width: 85%;
-            max-width: 320px;
-            text-align: center;
-            border: 1px solid #475569;
-        }
-
-        .modal-box select, .modal-box button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: none;
-            font-size: 16px;
-        }
-
-        .modal-box button {
-            background: #f59e0b;
-            font-weight: bold;
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
     <div class="game-wrapper">
-        <!-- HUD -->
         <div class="hud">
             <span id="scoreTxt">النقاط: 0</span>
-            <button onclick="toggleModal()" style="background:none; border:none; color:#fff; font-size:20px;">⚙️</button>
             <span id="livesTxt">الأرواح: ❤️❤️❤️</span>
         </div>
-
-        <!-- Canvas Game Viewport -->
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <canvas id="gameCanvas" width="400" height="350"></canvas>
     </div>
 
-    <!-- Clear On-Screen Touch Controls -->
     <div class="controls-container">
         <div class="d-pad">
             <div class="btn" id="btnLeft">⬅️</div>
             <div class="btn" id="btnRight">➡️</div>
         </div>
         <div class="btn btn-jump" id="btnJump">⬆️</div>
-    </div>
-
-    <!-- Settings Window -->
-    <div class="modal hidden" id="modal">
-        <div class="modal-box">
-            <h3>الإعدادات / Settings</h3>
-            <label>اختر اللغة / Language:</label>
-            <select id="langSelect" onchange="setLang(this.value)">
-                <option value="ar">العربية</option>
-                <option value="en">English</option>
-                <option value="fr">Français</option>
-                <option value="es">Español</option>
-                <option value="de">Deutsch</option>
-            </select>
-            <button onclick="toggleModal()">حفظ وإغلاق</button>
-        </div>
     </div>
 
     <script>
@@ -194,7 +133,7 @@
         let lives = 3;
 
         let player = {
-            x: 50, y: 200,
+            x: 50, y: 150,
             width: 24, height: 36,
             vx: 0, vy: 0,
             speed: 3.5,
@@ -204,36 +143,44 @@
         };
 
         let platforms = [
-            { x: 0, y: 360, width: 400, height: 40 },
-            { x: 50, y: 280, width: 100, height: 15 },
-            { x: 200, y: 220, width: 120, height: 15 },
-            { x: 80, y: 150, width: 90, height: 15 }
+            { x: 0, y: 310, width: 400, height: 40 },
+            { x: 40, y: 230, width: 110, height: 15 },
+            { x: 210, y: 180, width: 130, height: 15 },
+            { x: 70, y: 120, width: 100, height: 15 }
         ];
 
         let coins = [
-            { x: 100, y: 250, collected: false },
-            { x: 250, y: 190, collected: false },
-            { x: 120, y: 120, collected: false }
+            { x: 90, y: 190, collected: false },
+            { x: 270, y: 140, collected: false },
+            { x: 110, y: 80, collected: false }
         ];
 
         let keys = { left: false, right: false, jump: false };
 
-        // Touch Events Handling
-        const bindTouch = (id, key) => {
-            const el = document.getElementById(id);
-            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
-            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
-            el.addEventListener('mousedown', () => keys[key] = true);
-            el.addEventListener('mouseup', () => keys[key] = false);
-        };
+        // Fixed Touch Controls Listener
+        function setupButton(id, keyName) {
+            const btn = document.getElementById(id);
+            
+            ['touchstart', 'mousedown'].forEach(evt => {
+                btn.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    keys[keyName] = true;
+                    btn.classList.add('active');
+                }, { passive: false });
+            });
 
-        bindTouch('btnLeft', 'left');
-        bindTouch('btnRight', 'right');
-        bindTouch('btnJump', 'jump');
-
-        function toggleModal() {
-            document.getElementById('modal').classList.toggle('hidden');
+            ['touchend', 'mouseup', 'mouseleave'].forEach(evt => {
+                btn.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    keys[keyName] = false;
+                    btn.classList.remove('active');
+                }, { passive: false });
+            });
         }
+
+        setupButton('btnLeft', 'left');
+        setupButton('btnRight', 'right');
+        setupButton('btnJump', 'jump');
 
         function update() {
             if (keys.left) player.vx = -player.speed;
@@ -256,7 +203,7 @@
                     player.x < p.x + p.width &&
                     player.x + player.width > p.x &&
                     player.y + player.height > p.y &&
-                    player.y + player.height < p.y + p.vy + 10
+                    player.y + player.height < p.y + p.vy + 12
                 ) {
                     player.y = p.y - player.height;
                     player.vy = 0;
@@ -269,12 +216,12 @@
 
             if (player.y > canvas.height) {
                 lives--;
-                player.x = 50; player.y = 200; player.vy = 0;
+                player.x = 50; player.y = 150; player.vy = 0;
                 if (lives <= 0) { score = 0; lives = 3; coins.forEach(c => c.collected = false); }
             }
 
             coins.forEach(c => {
-                if (!c.collected && Math.abs(player.x - c.x) < 20 && Math.abs(player.y - c.y) < 20) {
+                if (!c.collected && Math.abs(player.x - c.x) < 22 && Math.abs(player.y - c.y) < 22) {
                     c.collected = true;
                     score += 100;
                 }
@@ -288,12 +235,11 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             // Draw Platforms
-            ctx.fillStyle = "#475569";
             platforms.forEach(p => {
+                ctx.fillStyle = "#475569";
                 ctx.fillRect(p.x, p.y, p.width, p.height);
                 ctx.fillStyle = "#64748b";
                 ctx.fillRect(p.x, p.y, p.width, 3);
-                ctx.fillStyle = "#475569";
             });
 
             // Draw Coins
