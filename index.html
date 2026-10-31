@@ -182,6 +182,19 @@
         setupButton('btnRight', 'right');
         setupButton('btnJump', 'jump');
 
+        // إضافة دعم لوحة المفاتيح (Keyboard Controls)
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.jump = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.jump = false;
+        });
+
         function update() {
             if (keys.left) player.vx = -player.speed;
             else if (keys.right) player.vx = player.speed;
@@ -198,12 +211,14 @@
 
             player.grounded = false;
 
+            // إصلاح شرط التصادم مع المنصات
             platforms.forEach(p => {
                 if (
                     player.x < p.x + p.width &&
                     player.x + player.width > p.x &&
-                    player.y + player.height > p.y &&
-                    player.y + player.height < p.y + p.vy + 12
+                    player.y + player.height >= p.y &&
+                    player.y + player.height <= p.y + p.height &&
+                    player.vy >= 0
                 ) {
                     player.y = p.y - player.height;
                     player.vy = 0;
@@ -221,7 +236,7 @@
             }
 
             coins.forEach(c => {
-                if (!c.collected && Math.abs(player.x - c.x) < 22 && Math.abs(player.y - c.y) < 22) {
+                if (!c.collected && Math.abs((player.x + player.width / 2) - c.x) < 18 && Math.abs((player.y + player.height / 2) - c.y) < 18) {
                     c.collected = true;
                     score += 100;
                 }
