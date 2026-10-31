@@ -1,265 +1,188 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ancient Odyssey: The Platform Quest</title>
     <style>
-        :root {
-            --bg-gradient: linear-gradient(to bottom, #1a1c29, #3b4252);
-            --panel-bg: rgba(20, 20, 30, 0.85);
-            --text-color: #f8fafc;
-            --accent-color: #f59e0b;
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: var(--bg-gradient);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #fff;
+            font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             min-height: 100vh;
             overflow: hidden;
         }
 
-        .game-container {
+        /* Container & HUD */
+        .game-wrapper {
             position: relative;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-            border-radius: 12px;
-            overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hud {
+            width: 100%;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+            font-size: 16px;
+            z-index: 10;
         }
 
         canvas {
             display: block;
-            background: #0f172a;
-        }
-
-        /* Top HUD Header */
-        .hud {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            pointer-events: none;
-            font-size: 18px;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
-
-        .hud div {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 14px;
-            border-radius: 20px;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-
-        /* Settings Button */
-        .settings-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255,255,255,0.2);
-            color: #fff;
-            padding: 8px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.2s;
-            z-index: 10;
-        }
-        .settings-btn:hover {
-            background: var(--accent-color);
-            color: #000;
-        }
-
-        /* Settings Modal / Overlay */
-        .modal {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 15, 0.9);
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            transition: opacity 0.3s ease;
-        }
-
-        .modal.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .modal-content {
-            background: var(--panel-bg);
-            padding: 30px;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.1);
-            width: 320px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-
-        .modal-content h2 {
-            margin-top: 0;
-            color: var(--accent-color);
-            margin-bottom: 20px;
-        }
-
-        .setting-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .setting-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 14px;
-            color: #cbd5e1;
-        }
-
-        .setting-group select, .setting-group button {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
+            height: auto;
             background: #1e293b;
-            color: #fff;
-            font-size: 15px;
-            cursor: pointer;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
         }
 
-        .setting-group select:focus {
-            outline: none;
-            border-color: var(--accent-color);
-        }
-
-        .close-modal {
-            margin-top: 20px;
-            background: var(--accent-color);
-            color: #000;
-            font-weight: bold;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
+        /* Touch Controls Area */
+        .controls-container {
             width: 100%;
-            transition: opacity 0.2s;
-        }
-        .close-modal:hover {
-            opacity: 0.9;
-        }
-
-        /* On-Screen Touch Controls */
-        .touch-controls {
+            max-width: 500px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
-            width: 800px;
-            margin-top: 15px;
-            padding: 0 10px;
-            box-sizing: border-box;
+            align-items: center;
+            background: #090d16;
         }
 
-        .touch-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 20px;
-            padding: 15px 25px;
-            border-radius: 12px;
-            cursor: pointer;
-            user-select: none;
-            backdrop-filter: blur(5px);
-            transition: background 0.1s;
+        .d-pad {
+            display: flex;
+            gap: 15px;
         }
-        .touch-btn:active {
-            background: var(--accent-color);
+
+        .btn {
+            background: #334155;
+            color: #fff;
+            border: 2px solid #64748b;
+            font-size: 24px;
+            font-weight: bold;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: background 0.1s, transform 0.1s;
+        }
+
+        .btn:active {
+            background: #f59e0b;
             color: #000;
+            transform: scale(0.92);
+        }
+
+        .btn-jump {
+            width: 75px;
+            height: 75px;
+            background: #dc2626;
+            border-color: #ef4444;
+            border-radius: 20px;
+        }
+
+        .btn-jump:active {
+            background: #22c55e;
+            border-color: #4ade80;
+        }
+
+        /* Settings Modal */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal.hidden { display: none; }
+
+        .modal-box {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 320px;
+            text-align: center;
+            border: 1px solid #475569;
+        }
+
+        .modal-box select, .modal-box button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: none;
+            font-size: 16px;
+        }
+
+        .modal-box button {
+            background: #f59e0b;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <!-- HUD Elements -->
-        <div class="hud" id="hudText">
-            <div id="scoreDisplay">Score: 0</div>
-            <div id="livesDisplay">Lives: ❤️❤️❤️</div>
+    <div class="game-wrapper">
+        <!-- HUD -->
+        <div class="hud">
+            <span id="scoreTxt">النقاط: 0</span>
+            <button onclick="toggleModal()" style="background:none; border:none; color:#fff; font-size:20px;">⚙️</button>
+            <span id="livesTxt">الأرواح: ❤️❤️❤️</span>
         </div>
 
-        <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️ Settings</button>
-
-        <!-- Canvas Game Area -->
-        <canvas id="gameCanvas" width="800" height="450"></canvas>
-
-        <!-- Settings Modal (Supporting > 20 Languages) -->
-        <div class="modal hidden" id="settingsModal">
-            <div class="modal-content">
-                <h2 id="modalTitle">Settings</h2>
-                
-                <div class="setting-group">
-                    <label id="langLabel" for="langSelect">Language:</label>
-                    <select id="langSelect" onchange="changeLanguage(this.value)">
-                        <option value="en">English</option>
-                        <option value="ar">العربية (Arabic)</option>
-                        <option value="fr">Français (French)</option>
-                        <option value="es">Español (Spanish)</option>
-                        <option value="de">Deutsch (German)</option>
-                        <option value="it">Italiano (Italian)</option>
-                        <option value="pt">Português (Portuguese)</option>
-                        <option value="ru">Русский (Russian)</option>
-                        <option value="zh">中文 (Chinese)</option>
-                        <option value="ja">日本語 (Japanese)</option>
-                        <option value="ko">한국어 (Korean)</option>
-                        <option value="hi">हिन्दी (Hindi)</option>
-                        <option value="tr">Türkçe (Turkish)</option>
-                        <option value="nl">Nederlands (Dutch)</option>
-                        <option value="pl">Polski (Polish)</option>
-                        <option value="vi">Tiếng Việt (Vietnamese)</option>
-                        <option value="id">Bahasa Indonesia</option>
-                        <option value="fa">فارسی (Persian)</option>
-                        <option value="ur">اردو (Urdu)</option>
-                        <option value="el">Ελληνικά (Greek)</option>
-                        <option value="sv">Svenska (Swedish)</option>
-                        <option value="he">עברית (Hebrew)</option>
-                    </select>
-                </div>
-
-                <div class="setting-group">
-                    <label id="soundLabel" for="soundSelect">Audio Effects:</label>
-                    <select id="soundSelect" onchange="toggleAudio(this.value)">
-                        <option value="on">Enabled</option>
-                        <option value="off">Disabled</option>
-                    </select>
-                </div>
-
-                <button class="close-modal" id="closeModalBtn" onclick="toggleSettings()">Save & Resume</button>
-            </div>
-        </div>
+        <!-- Canvas Game Viewport -->
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
     </div>
 
-    <!-- Mobile Touch Pad -->
-    <div class="touch-controls">
-        <div>
-            <button class="touch-btn" ontouchstart="keys.left=true" ontouchend="keys.left=false" onmousedown="keys.left=true" onmouseup="keys.left=false">◀</button>
-            <button class="touch-btn" ontouchstart="keys.right=true" ontouchend="keys.right=false" onmousedown="keys.right=true" onmouseup="keys.right=false">▶</button>
+    <!-- Clear On-Screen Touch Controls -->
+    <div class="controls-container">
+        <div class="d-pad">
+            <div class="btn" id="btnLeft">⬅️</div>
+            <div class="btn" id="btnRight">➡️</div>
         </div>
-        <div>
-            <button class="touch-btn" ontouchstart="keys.jump=true" ontouchend="keys.jump=false" onmousedown="keys.jump=true" onmouseup="keys.jump=false">▲ Jump</button>
+        <div class="btn btn-jump" id="btnJump">⬆️</div>
+    </div>
+
+    <!-- Settings Window -->
+    <div class="modal hidden" id="modal">
+        <div class="modal-box">
+            <h3>الإعدادات / Settings</h3>
+            <label>اختر اللغة / Language:</label>
+            <select id="langSelect" onchange="setLang(this.value)">
+                <option value="ar">العربية</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="es">Español</option>
+                <option value="de">Deutsch</option>
+            </select>
+            <button onclick="toggleModal()">حفظ وإغلاق</button>
         </div>
     </div>
 
@@ -267,99 +190,50 @@
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
 
-        // Localization Dictionary (> 20 Languages)
-        const translations = {
-            en: { settings: "⚙️ Settings", title: "Settings", lang: "Language:", sound: "Audio Effects:", close: "Save & Resume", score: "Score", lives: "Lives", jump: "▲ Jump" },
-            ar: { settings: "⚙️ الإعدادات", title: "الإعدادات", lang: "اللغة:", sound: "المؤثرات الصوتية:", close: "حفظ ومتابعة", score: "النقاط", lives: "الأرواح", jump: "▲ قفز" },
-            fr: { settings: "⚙️ Paramètres", title: "Paramètres", lang: "Langue:", sound: "Effets sonores:", close: "Enregistrer", score: "Score", lives: "Vies", jump: "▲ Sauter" },
-            es: { settings: "⚙️ Ajustes", title: "Ajustes", lang: "Idioma:", sound: "Efectos de sonido:", close: "Guardar", score: "Puntuación", lives: "Vidas", jump: "▲ Saltar" },
-            de: { settings: "⚙️ Einstellungen", title: "Einstellungen", lang: "Sprache:", sound: "Soundeffekte:", close: "Speichern", score: "Punktzahl", lives: "Leben", jump: "▲ Springen" },
-            it: { settings: "⚙️ Impostazioni", title: "Impostazioni", lang: "Lingua:", sound: "Effetti sonori:", close: "Salva", score: "Punteggio", lives: "Vite", jump: "▲ Salta" },
-            pt: { settings: "⚙️ Configurações", title: "Configurações", lang: "Idioma:", sound: "Efeitos sonoros:", close: "Salvar", score: "Pontuação", lives: "Vidas", jump: "▲ Pular" },
-            ru: { settings: "⚙️ Настройки", title: "Настройки", lang: "Язык:", sound: "Звуковые эффекты:", close: "Сохранить", score: "Счет", lives: "Жизни", jump: "▲ Прыжок" },
-            zh: { settings: "⚙️ 设置", title: "设置", lang: "语言:", sound: "音效:", close: "保存并继续", score: "分数", lives: "生命", jump: "▲ 跳跃" },
-            ja: { settings: "⚙️ 設定", title: "設定", lang: "言語:", sound: "効果音:", close: "保存", score: "スコア", lives: "ライフ", jump: "▲ ジャンプ" },
-            ko: { settings: "⚙️ 설정", title: "설정", lang: "언어:", sound: "효과음:", close: "저장", score: "점수", lives: "목숨", jump: "▲ 점프" },
-            hi: { settings: "⚙️ सेटिंग्स", title: "सेटिंग्स", lang: "भाषा:", sound: "ध्वनि प्रभाव:", close: "सहेजें", score: "स्कोर", lives: "जीवन", jump: "▲ कूदें" },
-            tr: { settings: "⚙️ Ayarlar", title: "Ayarlar", lang: "Dil:", sound: "Ses Efektleri:", close: "Kaydet", score: "Skor", lives: "Can", jump: "▲ Zıpla" },
-            nl: { settings: "⚙️ Instellingen", title: "Instellingen", lang: "Taal:", sound: "Geluidseffecten:", close: "Opslaan", score: "Score", lives: "Levens", jump: "▲ Spring" },
-            pl: { settings: "⚙️ Ustawienia", title: "Ustawienia", lang: "Język:", sound: "Efekty dźwiękowe:", close: "Zapisz", score: "Wynik", lives: "Życia", jump: "▲ Skok" },
-            vi: { settings: "⚙️ Cài đặt", title: "Cài đặt", lang: "Ngôn ngữ:", sound: "Hiệu ứng âm thanh:", close: "Lưu", score: "Điểm", lives: "Mạng", jump: "▲ Nhảy" },
-            id: { settings: "⚙️ Pengaturan", title: "Pengaturan", lang: "Bahasa:", sound: "Efek Suara:", close: "Simpan", score: "Skor", lives: "Nyawa", jump: "▲ Lompat" },
-            fa: { settings: "⚙️ تنظیمات", title: "تنظیمات", lang: "زبان:", sound: "جلوه‌های صوتی:", close: "ذخیره", score: "امتیاز", lives: "جان", jump: "▲ پرش" },
-            ur: { settings: "⚙️ سیٹنگز", title: "سیٹنگز", lang: "زبان:", sound: "آواز کے اثرات:", close: "محفوظ کریں", score: "اسکور", lives: "جانیں", jump: "▲ چھلانگ" },
-            el: { settings: "⚙️ الرρυθμίσεις", title: "Ρυθμίσεις", lang: "Γλώσσα:", sound: "Εφέ ήχου:", close: "Αποθήκευση", score: "Βαθμολογία", lives: "Ζωές", jump: "▲ Άلτος" },
-            sv: { settings: "⚙️ Inställningar", title: "Inställningar", lang: "Språk:", sound: "Ljudeffekter:", close: "Spara", score: "Poäng", lives: "Liv", jump: "▲ Hoppa" },
-            he: { settings: "⚙️ הגדרות", title: "הגדרות", lang: "שפה:", sound: "אפקטים קוליים:", close: "שמור", score: "ניקוד", lives: "חיים", jump: "▲ קפוץ" }
-        };
-
-        let currentLang = 'en';
-        let audioEnabled = true;
-
-        function changeLanguage(lang) {
-            currentLang = lang;
-            const t = translations[lang] || translations['en'];
-            document.getElementById('settingsBtn').innerText = t.settings;
-            document.getElementById('modalTitle').innerText = t.title;
-            document.getElementById('langLabel').innerText = t.lang;
-            document.getElementById('soundLabel').innerText = t.sound;
-            document.getElementById('closeModalBtn').innerText = t.close;
-            document.documentElement.dir = (lang === 'ar' || lang === 'fa' || lang === 'ur' || lang === 'he') ? 'rtl' : 'ltr';
-        }
-
-        function toggleAudio(val) {
-            audioEnabled = (val === 'on');
-        }
-
-        function toggleSettings() {
-            const modal = document.getElementById('settingsModal');
-            modal.classList.toggle('hidden');
-        }
-
-        // Realistic Game Engine & Physics
         let score = 0;
         let lives = 3;
 
         let player = {
-            x: 80,
-            y: 280,
-            width: 32,
-            height: 48,
-            vx: 0,
-            vy: 0,
-            speed: 4.5,
-            jumpPower: -11,
-            gravity: 0.55,
+            x: 50, y: 200,
+            width: 24, height: 36,
+            vx: 0, vy: 0,
+            speed: 3.5,
+            jumpPower: -10,
+            gravity: 0.5,
             grounded: false
         };
 
-        // Realistic environments: Realistic rocky platforms and ancient ruins
         let platforms = [
-            { x: 0, y: 390, width: 900, height: 60, type: 'ground' },
-            { x: 250, y: 300, width: 140, height: 22, type: 'platform' },
-            { x: 480, y: 220, width: 160, height: 22, type: 'platform' },
-            { x: 150, y: 160, width: 130, height: 22, type: 'platform' }
+            { x: 0, y: 360, width: 400, height: 40 },
+            { x: 50, y: 280, width: 100, height: 15 },
+            { x: 200, y: 220, width: 120, height: 15 },
+            { x: 80, y: 150, width: 90, height: 15 }
         ];
 
-        let collectibles = [
-            { x: 310, y: 255, radius: 10, collected: false },
-            { x: 540, y: 175, radius: 10, collected: false },
-            { x: 200, y: 115, radius: 10, collected: false }
+        let coins = [
+            { x: 100, y: 250, collected: false },
+            { x: 250, y: 190, collected: false },
+            { x: 120, y: 120, collected: false }
         ];
 
         let keys = { left: false, right: false, jump: false };
 
-        window.addEventListener('keydown', e => {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
-            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
-            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.jump = true;
-        });
+        // Touch Events Handling
+        const bindTouch = (id, key) => {
+            const el = document.getElementById(id);
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
+            el.addEventListener('mousedown', () => keys[key] = true);
+            el.addEventListener('mouseup', () => keys[key] = false);
+        };
 
-        window.addEventListener('keyup', e => {
-            if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
-            if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
-            if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.jump = false;
-        });
+        bindTouch('btnLeft', 'left');
+        bindTouch('btnRight', 'right');
+        bindTouch('btnJump', 'jump');
+
+        function toggleModal() {
+            document.getElementById('modal').classList.toggle('hidden');
+        }
 
         function update() {
             if (keys.left) player.vx = -player.speed;
@@ -377,13 +251,12 @@
 
             player.grounded = false;
 
-            // Platform collision with realistic boundary checks
             platforms.forEach(p => {
                 if (
                     player.x < p.x + p.width &&
                     player.x + player.width > p.x &&
                     player.y + player.height > p.y &&
-                    player.y + player.height < p.y + p.vy + 15
+                    player.y + player.height < p.y + p.vy + 10
                 ) {
                     player.y = p.y - player.height;
                     player.vy = 0;
@@ -391,116 +264,62 @@
                 }
             });
 
-            // Screen boundaries
             if (player.x < 0) player.x = 0;
             if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 
-            // Fall reset
             if (player.y > canvas.height) {
                 lives--;
-                player.x = 80;
-                player.y = 200;
-                player.vy = 0;
-                if (lives <= 0) {
-                    score = 0;
-                    lives = 3;
-                }
+                player.x = 50; player.y = 200; player.vy = 0;
+                if (lives <= 0) { score = 0; lives = 3; coins.forEach(c => c.collected = false); }
             }
 
-            // Collectibles interaction
-            collectibles.forEach(c => {
-                if (!c.collected) {
-                    let dx = (player.x + player.width / 2) - c.x;
-                    let dy = (player.y + player.height / 2) - c.y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < player.width / 2 + c.radius) {
-                        c.collected = true;
-                        score += 100;
-                    }
+            coins.forEach(c => {
+                if (!c.collected && Math.abs(player.x - c.x) < 20 && Math.abs(player.y - c.y) < 20) {
+                    c.collected = true;
+                    score += 100;
                 }
             });
 
-            // Update HUD text dynamically
-            const t = translations[currentLang] || translations['en'];
-            document.getElementById('scoreDisplay').innerText = `${t.score}: ${score}`;
-            document.getElementById('livesDisplay').innerText = `${t.lives}: ${'❤️'.repeat(Math.max(0, lives))}`;
+            document.getElementById('scoreTxt').innerText = `النقاط: ${score}`;
+            document.getElementById('livesTxt').innerText = `الأرواح: ${'❤️'.repeat(lives)}`;
         }
 
         function draw() {
-            // Realistic Background gradient & atmospheric depth
-            let bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            bgGradient.addColorStop(0, '#0f172a');
-            bgGradient.addColorStop(1, '#1e293b');
-            ctx.fillStyle = bgGradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw Parallax / Realistic atmospheric structures (ancient ruins silhouettes)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-            ctx.fillRect(100, 150, 80, 240);
-            ctx.fillRect(600, 100, 120, 290);
-
-            // Draw Platforms with realistic stony textures & shadows
+            // Draw Platforms
+            ctx.fillStyle = "#475569";
             platforms.forEach(p => {
-                let pGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
-                pGrad.addColorStop(0, '#475569');
-                pGrad.addColorStop(1, '#334155');
-                ctx.fillStyle = pGrad;
                 ctx.fillRect(p.x, p.y, p.width, p.height);
-
-                // Top moss/stone highlight edge
-                ctx.fillStyle = '#64748b';
-                ctx.fillRect(p.x, p.y, p.width, 4);
+                ctx.fillStyle = "#64748b";
+                ctx.fillRect(p.x, p.y, p.width, 3);
+                ctx.fillStyle = "#475569";
             });
 
-            // Draw Collectibles (Glowing Relics / Ancient Coins)
-            collectibles.forEach(c => {
+            // Draw Coins
+            coins.forEach(c => {
                 if (!c.collected) {
-                    ctx.save();
                     ctx.beginPath();
-                    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = '#f59e0b';
-                    ctx.shadowColor = '#f59e0b';
-                    ctx.shadowBlur = 12;
+                    ctx.arc(c.x, c.y, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = "#f59e0b";
                     ctx.fill();
-                    ctx.closePath();
-                    ctx.restore();
                 }
             });
 
-            // Draw Realistic Adventurer Character (Detailed retro hero design with classic hat & outfit)
-            let px = player.x;
-            let py = player.y;
-
-            // Body / Overalls
-            ctx.fillStyle = '#2563eb';
-            ctx.fillRect(px + 6, py + 20, 20, 20);
-
-            // Shirt / Red jacket
-            ctx.fillStyle = '#dc2626';
-            ctx.fillRect(px + 4, py + 12, 24, 12);
-
-            // Head / Face
-            ctx.fillStyle = '#fde68a';
-            ctx.fillRect(px + 8, py + 4, 16, 12);
-
-            // Classic Red Cap with brim
-            ctx.fillStyle = '#dc2626';
-            ctx.fillRect(px + 6, py, 20, 6);
-            ctx.fillRect(px + 16, py + 2, 8, 4);
-
-            // Shoes / Boots
-            ctx.fillStyle = '#78350f';
-            ctx.fillRect(px + 4, py + 40, 10, 8);
-            ctx.fillRect(px + 18, py + 40, 10, 8);
+            // Draw Player
+            ctx.fillStyle = "#dc2626";
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = "#fde68a";
+            ctx.fillRect(player.x + 4, player.y + 4, player.width - 8, 10);
         }
 
-        function gameLoop() {
+        function loop() {
             update();
             draw();
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(loop);
         }
 
-        gameLoop();
+        loop();
     </script>
 </body>
 </html>
