@@ -119,7 +119,7 @@
 
     <div class="controls-container">
         <div class="d-pad">
-            <!-- تم عكس الأزرار هنا وتصحيح الاتجاهات -->
+            <!-- تم عكس الأزرار هنا وتصحيح الاتجاهات بدقة -->
             <div class="btn" id="btnRight">⬅️</div>
             <div class="btn" id="btnLeft">➡️</div>
         </div>
@@ -144,7 +144,7 @@
             grounded: false
         };
 
-        // مستويات اللعبة والمهمات
+        // مستويات اللعبة والمهمات المتعددة لمواصلة اللعب
         const levels = [
             {
                 platforms: [
@@ -234,12 +234,12 @@
 
         function showMessage(text) {
             message = text;
-            messageTimer = 90; // مدة ظهور الرسالة
+            messageTimer = 90;
         }
 
         function loadLevel(lvlIndex) {
             if (lvlIndex >= levels.length) {
-                showMessage("🎉 مبروك! أنهيت اللعبة بنجاح!");
+                showMessage("🎉 مبروك! أنهيت جميع المهمات بنجاح!");
                 currentLevel = 0;
                 score = 0;
             } else {
@@ -269,7 +269,6 @@
 
             player.grounded = false;
 
-            // التصادم مع المنصات
             activeLevel.platforms.forEach(p => {
                 if (
                     player.x < p.x + p.width &&
@@ -287,7 +286,6 @@
             if (player.x < 0) player.x = 0;
             if (player.x > canvas.width - player.width) player.x = canvas.width - player.width;
 
-            // السقوط في الفراغ
             if (player.y > canvas.height) {
                 lives--;
                 player.x = 50; player.y = 150; player.vy = 0;
@@ -298,19 +296,16 @@
                 }
             }
 
-            // جمع العملات (المهمة الأولى)
             activeLevel.coins.forEach(c => {
                 if (!c.collected && Math.abs((player.x + player.width / 2) - c.x) < 18 && Math.abs((player.y + player.height / 2) - c.y) < 18) {
                     c.collected = true;
                     score += 100;
-                    // فحص ما إذا تم جمع كل العملات
                     if (activeLevel.coins.every(coin => coin.collected)) {
-                        showMessage("✨ افتتح الباب! توجه إليه!");
+                        showMessage("✨ تم جمع العملات! توجه نحو البوابة!");
                     }
                 }
             });
 
-            // التحقق من الوصول للبوابة عند جمع كافة العملات
             let allCollected = activeLevel.coins.every(c => c.collected);
             let d = activeLevel.door;
             if (allCollected &&
@@ -331,7 +326,6 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // رسم المنصات
             activeLevel.platforms.forEach(p => {
                 ctx.fillStyle = "#475569";
                 ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -339,7 +333,6 @@
                 ctx.fillRect(p.x, p.y, p.width, 3);
             });
 
-            // رسم البوابة (تتغير لونه للأخضر إذا اكتمل جمع العملات)
             let allCollected = activeLevel.coins.every(c => c.collected);
             let d = activeLevel.door;
             ctx.fillStyle = allCollected ? "#22c55e" : "#64748b";
@@ -347,7 +340,6 @@
             ctx.strokeStyle = "#fff";
             ctx.strokeRect(d.x, d.y, d.width, d.height);
 
-            // رسم العملات
             activeLevel.coins.forEach(c => {
                 if (!c.collected) {
                     ctx.beginPath();
@@ -357,20 +349,18 @@
                 }
             });
 
-            // رسم اللاعب
             ctx.fillStyle = "#dc2626";
             ctx.fillRect(player.x, player.y, player.width, player.height);
             ctx.fillStyle = "#fde68a";
             ctx.fillRect(player.x + 4, player.y + 4, player.width - 8, 10);
 
-            // عرض رسائل التوجيه والمهمات على الشاشة
             if (messageTimer > 0) {
                 ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
                 ctx.fillRect(50, 130, 300, 50);
                 ctx.strokeStyle = "#f59e0b";
                 ctx.strokeRect(50, 130, 300, 50);
                 ctx.fillStyle = "#fff";
-                ctx.font = "bold 16px sans-serif";
+                ctx.font = "bold 15px sans-serif";
                 ctx.textAlign = "center";
                 ctx.fillText(message, canvas.width / 2, 160);
             }
